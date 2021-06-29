@@ -183,15 +183,20 @@ def guess_results(error_arr, lum_dist, d_tgt, inc_tgt):
     return restult_arr
 
 
-def Standard_Siren_caclulator(lum_dist, times, mass, max_strain, z, GW_names, sig_ligo, sig_z, plot=False, prt=False):
+def Standard_Siren_caclulator(lum_dist, times, mass, max_strain, z, GW_names, sig_ligo, sig_z, plot=False, prt=False, inc_tsting=False):
     
     # Determine d_old 
     d_old = []
+    
+    # for inc testing 
+    inc_old_val = []
+    
     for x in np.arange(len(times)):
         # Calculate distance and inc using standard method 
         inc = best_i(lum_dist[x], lambda i: distance_to_GW(times[x], mass[x], max_strain[x],i)) # OG inc
         d = distance_to_GW(times[x], mass[x], max_strain[x],inc)
         d_old.append(d)
+        inc_old_val.append(inc)
         
     # determine n_guess
     n_guess = guess_n(lum_dist, times, mass, max_strain)
@@ -224,12 +229,22 @@ def Standard_Siren_caclulator(lum_dist, times, mass, max_strain, z, GW_names, si
     z_new = []
     z_sig_arr = []
     n_new = []
+    
+    #for inc testing
+    d_new_dom = []
+    d_new_val = []
+    inc_new_val = []
 
     for x in np.arange(len(lum_dist)):
         results = np.array(r_check[x])
         
+        if inc_tsting == True: 
+            d_new_dom.append(d_new[x])
+            
         if results.all() == 0: 
-            #distances.append(np.nan)
+            # for inc testing
+            d_new_val.append(0)
+            inc_new_val.append(0)
             continue
         elif results.all() != 0:
             d = results[0]
@@ -246,6 +261,10 @@ def Standard_Siren_caclulator(lum_dist, times, mass, max_strain, z, GW_names, si
             d_act_arr.append(float(lum_dist[x]))
             d_sig_arr.append(sig_ligo[x])
             z_sig_arr.append(sig_z[x])
+            
+            #for inc testing
+            d_new_val.append(d)
+            inc_new_val.append(inc)
     
     # Find v
     n_sorted = [n_new[2], n_new[1], n_new[3], n_new[5], n_new[4], n_new[0]]
@@ -331,7 +350,7 @@ def Standard_Siren_caclulator(lum_dist, times, mass, max_strain, z, GW_names, si
             print(GW_names_gd_sorted[x])
             print('-------------------')
             print('z ≈ ' + str(z_sorted[x]))
-            print('n ≈ ' + str(n_sorted[x]))
+            print('n ≈ ' + str(int(n_sorted[x])))
             print('D_guess ~ ' + str(np.round(distances_sorted[x], 3)) + ' ± ' + str(float(sig_d_i[x])) + ' Mpc')
             print('i_guess ≈ ' + str(incs_sorted[x]) + ' rad, ' + str(np.round(np.rad2deg(incs_sorted[x]))) + '°') 
             print('H0_estimate ≈ ' + str(np.round(H0_i[x],3)) +' ± ' +
@@ -347,10 +366,19 @@ def Standard_Siren_caclulator(lum_dist, times, mass, max_strain, z, GW_names, si
         #print('Absolute Error For H0_actual upper Limit~ ' + 
         #      str(np.round(abs(H_bar-(70.3+5.3))/(70.3+5.3) *100, 3)) + '%') # errors on line above need fix
     
+    if inc_tsting == True:
+        print(' ')
+        print('Returns: d_new_dom, d_old, inc_old_val, d_new_val, inc_new_val, n_guess')
+        return d_new_dom, d_old, inc_old_val, d_new_val, inc_new_val, n_guess 
+    else: 
+    #if inc_tsting == False: 
+        print(' ')
+        print('Returns: H_bar, sig_Hbar, H_bar_min, sig_Hbar_min, n_new')
+        return H_bar, sig_Hbar, H_bar_min, sig_Hbar_min, n_new
     
     #return r_check, z_sorted,GW_names_gd_sorted, distances_sorted, H_bar_min, sig_Hbar_min
     #return H_bar, sig_Hbar
     #return H0_i, sig_hi, distances_sorted, sig_d, v_sorted, sig_v, yfit 
-    return H_bar, sig_Hbar, H_bar_min, sig_Hbar_min, n_new
+    #return H_bar, sig_Hbar, H_bar_min, sig_Hbar_min, n_new
 
 
